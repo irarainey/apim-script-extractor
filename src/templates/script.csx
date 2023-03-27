@@ -1,5 +1,5 @@
 #r "Newtonsoft.Json"
-#load "./_context.csx"
+#load "./context.csx"
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -14,17 +14,21 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
-// This is the main entry point for the script. The context parameter contains information about the current request and response.
+// This is the main entry point for the script.
+var scriptPath = Args[0];
+
+// The context parameter contains information about the current request and response.
 // Define the context values you want to use in the script.
-ApimContext context = new ApimContext();
+ApimContext context = new ApimContext(scriptPath);
 
 // Call the ExtractedScript method
-string result = ExtractedScript(context);
+var result = ExtractedScript(context);
 
 // Write out the result
-Console.WriteLine(result);
+Console.WriteLine(result.toString());
 
-private static string ExtractedScript(ApimContext context)
+// The extracted script returns a dynamic object to cater for different return types
+private static dynamic ExtractedScript(ApimContext context)
 {
     return "{0}";
 }        

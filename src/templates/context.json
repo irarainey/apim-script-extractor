@@ -1,0 +1,154 @@
+{
+	"Api": {
+		"Id": null,
+		"IsCurrentRevision": false,
+		"Name": null,
+		"Path": null,
+		"Revision": null,
+		"Protocols": [],
+		"ServiceUrl": { 
+			"Host": null, 
+			"Path": null, 
+			"Port": 0, 
+			"Query": { 
+				"Values": {
+
+				} 
+			}, 
+			"QueryString": null, 
+			"Scheme": null 
+		},
+		"Version": null,
+		"SubscriptionKeyParameterNames": { 
+			"Header": null, 
+			"Query": null 
+		},
+		"Workspace": { 
+			"Id": null, 
+			"Name": null 
+		}
+	},
+	"Deployment": { 
+		"GatewayId": null, 
+		"Region": null, 
+		"ServiceId": null, 
+		"ServiceName": null, 
+		"Certificates": {
+
+		} 
+	},
+	"Elapsed": "00:00:00",
+	"LastError": { 
+		"Source": null, 
+		"Reason": null, 
+		"Message": null, 
+		"Scope": null, 
+		"Section": null, 
+		"Path": null, 
+		"PolicyId": null 
+	},
+	"Operation": { 
+		"Id": null, 
+		"Method": null, 
+		"Name": null, 
+		"UrlTemplate": null 
+	},
+	"Product": {
+		"Apis": [],
+		"ApprovalRequired": false,
+		"Groups": [],
+		"Id": null,
+		"Name": null,
+		"State": 0,
+		"SubscriptionLimit": null,
+		"SubscriptionRequired": false,
+		"Workspace": { 
+			"Id": null, 
+			"Name": null 
+		}
+	},
+	"Request": {
+		"Body": { 
+			"Content": null 
+		},
+		"Certificate": null,
+		"Headers": { 
+			"Values": {
+
+			} 
+		},
+		"IpAddress": null,
+		"MatchParameters": {
+
+		},
+		"Method": null,
+		"OriginalUrl": { 
+			"Host": null, 
+			"Path": null, 
+			"Port": 0, 
+			"Query": { 
+				"Values": {
+
+				} 
+			}, 
+			"QueryString": null, 
+			"Scheme": null 
+		},
+		"Url": { 
+			"Host": null, 
+			"Path": null, 
+			"Port": 0, 
+			"Query": { 
+				"Values": {
+
+				} 
+			}, 
+			"QueryString": null, 
+			"Scheme": null },
+		"PrivateEndpointConnection": { 
+			"Name": null, 
+			"GroupId": null, 
+			"MemberName": null 
+		}
+	},
+	"RequestId": "00000000-0000-0000-0000-000000000000",
+	"Response": { 
+		"Body": { 
+			"Content": null 
+			}, 
+			"Headers": { 
+				"Values": {
+
+				} 
+			}, 
+			"StatusCode": 0, 
+			"StatusReason": null 
+		},
+	"Subscription": {
+		"CreatedDate": "0001-01-01T00:00:00",
+		"EndDate": null,
+		"Id": null,
+		"Key": null,
+		"Name": null,
+		"PrimaryKey": null,
+		"SecondaryKey": null,
+		"StartDate": null
+	},
+	"Timestamp": "0001-01-01T00:00:00",
+	"Tracing": false,
+	"User": {
+		"Email": null,
+		"FirstName": null,
+		"Groups": [],
+		"Id": null,
+		"Identities": [],
+		"LastName": null,
+		"Note": null,
+		"RegistrationDate": "0001-01-01T00:00:00"
+	},
+	"Variables": { 
+		"Values": {
+
+		}
+	}
+}

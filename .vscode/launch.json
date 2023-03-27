@@ -21,8 +21,9 @@
             "program": "dotnet",
             "args": [
                 "exec",
-                "C:/Users/irarainey/.dotnet/tools/.store/dotnet-script/1.4.0/dotnet-script/1.4.0/tools/net7.0/any/dotnet-script.dll",
-                "${file}"
+                "${userHome}/.dotnet/tools/.store/dotnet-script/1.4.0/dotnet-script/1.4.0/tools/net7.0/any/dotnet-script.dll",
+                "${file}",
+                "${fileDirname}"
             ],
             "cwd": "${workspaceRoot}",
             "stopAtEntry": false
