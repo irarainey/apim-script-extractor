@@ -14,17 +14,17 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
-internal class Program
-{
-    static void Main(string[] args)
-    {
-        ApimContext context = new ApimContext();
-        string result = Snippet(context);
-        Console.WriteLine(result);
-    }
+// This is the main entry point for the script. The context parameter contains information about the current request and response.
+// Define the context values you want to use in the script.
+ApimContext context = new ApimContext();
 
-    private static string Snippet(ApimContext context)
-    {
-        return "{0}";
-    }        
-}
+// Call the ExtractedScript method
+string result = ExtractedScript(context);
+
+// Write out the result
+Console.WriteLine(result);
+
+private static string ExtractedScript(ApimContext context)
+{
+    return "{0}";
+}        
