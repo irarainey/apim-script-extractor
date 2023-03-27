@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<!--
+    // ====================================================================================================
+    // Handle Auth Code request callback to exchange auth code for access token and set in encrypted cookie
+    // Values in {{value}} syntax are defined as Named Values in APIM instance.
+    // ====================================================================================================
+-->
+<policies>
+    <inbound>
+        <base />
+        <!-- 
+            // ====================================================================================================
+            // Call the token server to exchange the auth code for an access token.
+            // This request will return a JSON object with the access token. No refresh token will be returned
+            // as it was not requested in the original scope request. To request a refresh token, add the
+            // "offline_access" scope to the original request.
+            // ====================================================================================================
+         -->
+        <send-request ignore-error="false" timeout="20" response-variable-name="response" mode="new">
+            <set-url>https://login.microsoftonline.com/{{tenant-id}}/oauth2/v2.0/token</set-url>
+            <set-method>POST</set-method>
+            <set-header name="Content-Type" exists-action="override">
+                <value>application/x-www-form-urlencoded</value>
+            </set-header>
+            <set-body>@($"grant_type=authorization_code&amp;code={context.Request.OriginalUrl.Query.GetValueOrDefault("code")}&amp;client_id={{client-id}}&amp;client_secret={{client-secret}}&amp;redirect_uri=https://{context.Request.OriginalUrl.Host}/auth/callback")</set-body>
+        </send-request>
+        <!-- 
+            // ====================================================================================================
+            // Extract the access token from the token server response.
+            // This sample does not request a refresh token. If a refresh token is requested, it will be returned
+            // in the response together with the access_token and should be extracted separately.
+            // ====================================================================================================
+         -->
+        <set-variable name="token" value="@(context.Variables.GetValueOrDefault<IResponse>("response").Body.As<JObject>())" />
+    </inbound>
+    <backend />
+    <outbound>
+        <!-- 
+            // ====================================================================================================
+            // Generate a random IV to encrypt the access token and set it into a variable. This ensures that the
+            // encrypted content is different each time a token in encrypted.
+            // This sample uses AES encryption with key is stored in a Named Value in APIM. Any encryption key
+            // should be rotated regularly to ensure the security of the encryption.
+            // ====================================================================================================
+         -->
+        <set-variable name="cookie" value="@{
+            var rng = new RNGCryptoServiceProvider();
+            var iv = new byte[16];
+            rng.GetBytes(iv);
+            byte[] tokenBytes = Encoding.UTF8.GetBytes((string)(context.Variables.GetValueOrDefault<JObject>("token"))["access_token"]);
+            byte[] encryptedToken = tokenBytes.Encrypt("Aes", Convert.FromBase64String("{{enc-key}}"), iv);
+            byte[] combinedContent = new byte[iv.Length + encryptedToken.Length];
+            Array.Copy(iv, 0, combinedContent, 0, iv.Length);
+            Array.Copy(encryptedToken, 0, combinedContent, iv.Length, encryptedToken.Length);
+            return System.Net.WebUtility.UrlEncode(Convert.ToBase64String(combinedContent));
+        }" />
+        <!-- 
+            // ========================================================================================================
+            // Create a return response to redirect back to the calling application.
+            // Set the encrypted and base64url encoded access token into a cookie.
+            // Cookies are created as session cookies by default. If you are not implementing a refresh token
+            // to the pattern then it setting the expiry of the cookie to match that of the access token could
+            // be considered. This would ensure that the cookie is removed when the access token expires.
+            //
+            // Details on configurable token lifetimes can be found here:
+            // https://learn.microsoft.com/azure/active-directory/develop/active-directory-configurable-token-lifetimes
+            // ========================================================================================================
+         -->
+        <return-response>
+            <set-status code="302" reason="Temporary Redirect" />
+            <set-header name="Set-Cookie" exists-action="override">
+                <value>@($"{{cookie-name}}={context.Variables.GetValueOrDefault<string>("cookie")}; Secure; SameSite=Strict; Path=/; Domain={{cookie-domain}}; HttpOnly")</value>
+            </set-header>
+            <set-header name="Location" exists-action="override">
+                <value>{{return-uri}}</value>
+            </set-header>
+        </return-response>
+        <!-- 
+            // ====================================================================================================
+            // Do not call base as we have no need to call external endpoint.
+            // ====================================================================================================
+         -->
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>
