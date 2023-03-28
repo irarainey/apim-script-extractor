@@ -425,7 +425,7 @@ public class Jwt : IJwt
 {
     public string Algorithm { get; set; }
 
-    public IEnumerable<string> Audiences { get; set; }
+    public List<string> Audiences { get; set; }
 
     public Claim Claims { get; set; }
 
@@ -452,14 +452,14 @@ public class Jwt : IJwt
 
 public class Claim : IClaim
 {
-    public IDictionary<string, string> Values { get; set; }
+    public IDictionary<string, string[]> Values { get; set; }
 
     public Claim()
     {
-        Values = new Dictionary<string, string>();
+        Values = new Dictionary<string, string[]>();
     }
 
-    public string GetValueOrDefault(string claimName, string defaultValue = null)
+    public string[] GetValueOrDefault(string claimName, string[] defaultValue = null)
     {
         if (Values.TryGetValue(claimName, out var value))
         {
@@ -724,7 +724,7 @@ public interface IJwt
 {
     string Algorithm { get; set; }
 
-    IEnumerable<string> Audiences { get; set; }
+    List<string> Audiences { get; set; }
 
     Claim Claims { get; set; }
 
@@ -745,9 +745,9 @@ public interface IJwt
 
 public interface IClaim
 {
-    IDictionary<string, string> Values { get; set; }
+    IDictionary<string, string[]> Values { get; set; }
 
-    string GetValueOrDefault(string claimName, string defaultValue = null);
+    string[] GetValueOrDefault(string claimName, string[] defaultValue = null);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -784,34 +784,74 @@ public static bool TryParseBasic(this string str, out BasicAuthCredentials crede
     }
 }
 
-public static string DecodeBase64(this string str)
+public static string DecodeBase64Url(this string str)
 {
+    str = str.Replace('-', '+').Replace('_', '/');
+    while (str.Length % 4 != 0)
+    {
+        str += '=';
+    }
     return Encoding.ASCII.GetString(Convert.FromBase64String(str));
 }
 
 public static Jwt AsJwt(this string str)
 {
     var parts = str.Split('.');
-    var header = parts[0].DecodeBase64();
-    var payload = parts[1].DecodeBase64();
-    var signature = parts[2].DecodeBase64();
+    var header = parts[0].DecodeBase64Url();
+    var payload = parts[1].DecodeBase64Url();
 
     var headerJson = JObject.Parse(header);
     var payloadJson = JObject.Parse(payload);
 
-    return new Jwt
+    Jwt jwt = new Jwt();
+    //jwt.Audiences = new List<string>();
+    //jwt.Claims = new Claim();
+
+    jwt.Algorithm = headerJson["alg"].Value<string>();
+    jwt.Type = headerJson["typ"].Value<string>();
+    jwt.Issuer = payloadJson["iss"].Value<string>();
+    jwt.Subject = payloadJson["sub"].Value<string>();
+
+    long iat = payloadJson["iat"].Value<long>();
+    DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(iat);
+    jwt.IssuedAt = dateTimeOffset.LocalDateTime;
+
+    long exp = payloadJson["exp"].Value<long>();
+    dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(iat);
+    jwt.ExpirationTime = dateTimeOffset.LocalDateTime;
+
+    long nbf = payloadJson["nbf"].Value<long>();
+    dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(iat);
+    jwt.NotBefore = dateTimeOffset.LocalDateTime;
+
+    if(payloadJson["aud"].GetType() == typeof(JArray))
     {
-        Algorithm = headerJson["alg"].Value<string>(),
-        Audiences = payloadJson["aud"].Values<string>(),
-        //Claims = payloadJson.Properties().ToDictionary(p => p.Name, p => p.Values<string>().ToArray()),
-        ExpirationTime = payloadJson["exp"].Value<DateTime?>(),
-        Id = payloadJson["jti"].Value<string>(),
-        Issuer = payloadJson["iss"].Value<string>(),
-        IssuedAt = payloadJson["iat"].Value<DateTime?>(),
-        NotBefore = payloadJson["nbf"].Value<DateTime?>(),
-        Subject = payloadJson["sub"].Value<string>(),
-        Type = payloadJson["typ"].Value<string>()
-    };
+        jwt.Audiences = (List<string>)payloadJson["aud"].Values<string>();
+    }
+    else
+    {
+        jwt.Audiences = new List<string>();
+        jwt.Audiences.Add(payloadJson["aud"].Value<string>());
+    }
+
+    foreach (var item in payloadJson)
+    {
+        if (item.Key != "iss" && item.Key != "sub" && item.Key != "aud" && item.Key != "exp" && item.Key != "nbf" && item.Key != "iat")
+        {
+            if(item.Value.GetType() == typeof(JArray))
+            {
+                jwt.Claims.Values.Add(item.Key, item.Value.Values<string>().ToArray());
+            }
+            else
+            {
+                var values = new string[1];
+                values[0] = item.Value.Value<string>();
+                jwt.Claims.Values.Add(item.Key, values);
+            }
+        }
+    }
+
+    return jwt;
 }
 
 public static bool TryParseJwt(this string str, out Jwt jwt)
