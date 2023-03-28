@@ -46,4 +46,4 @@ With the scripts extracted, they can be tested and debugged using the `dotnet-sc
 
 Each `*.csx` script file can be debugged individually, and the `context.json` file can be edited to provide common context settings required for testing.
 
-To debug a script file, open the `*.csx` file in Visual Studio Code, and press `F5` to start debugging. The script will be run, and the output will be displayed in the Debug Console. Breakpoints can be set in the script file to debug the script.
+To debug a script file, open the `*.csx` file in Visual Studio Code, change the debug profile to `Debug .NET Script` and press `F5` to start debugging. The script will be run, and the output will be displayed in the Debug Console. Breakpoints can be set in the script file to debug the script.

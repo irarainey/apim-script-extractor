@@ -30,5 +30,6 @@ Console.WriteLine(result.toString());
 // The extracted script returns a dynamic object to cater for different return types
 private static dynamic ExtractedScript(ApimContext context)
 {
-    return "{0}";
+{0}
+    return "{1}";
 }        

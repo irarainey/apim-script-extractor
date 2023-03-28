@@ -6,6 +6,7 @@ const directoryPath = `${process.cwd()}/policies/`;
 // Define RegEx patterns
 const blockPattern = /@{((?:[^{}]|{(?:[^{}]|{(?:[^{}]|{[^{}]*})*})*})*)}/g;
 const inlinePattern = /@\((?:[^()]+|\((?:[^()]+|\([^()]*\))*\))*\)/g;
+const namedValuePattern = /({{)(.*?)(}})/g;
 
 export const extract = () => {
 	// Read all files in the directory
@@ -37,7 +38,7 @@ const extractScript = (path: string, file: string) => {
 	const inline = policy.match(inlinePattern)?.map((m) => m.slice(2, -1)) || [];
 
 	// Read the template file
-	const template = fs.readFileSync(`${process.cwd()}/src/templates/script.csx`, "utf8");
+	let template = fs.readFileSync(`${process.cwd()}/src/templates/script.csx`, "utf8");
 
 	// Define the output directory name
 	const output = `${path.replace("policies/", "")}scripts/${file.replace(".xml", "")}`;
@@ -53,11 +54,47 @@ const extractScript = (path: string, file: string) => {
 
 	// Write the block snippets out as C# script files
 	blocks.forEach((match, index) => {
-		fs.writeFileSync(`${output}/block-${(index + 1).toString().padStart(3, "0")}.csx`, template.replace('return "{0}";', match));
+
+		let variables: string = "";
+		let found;
+		let scriptBody = match;
+		while ((found = namedValuePattern.exec(match)) !== null) {
+			if(variables === "") {
+				variables += `\t// The following named values have been extracted from the script and replaced with variables\r\n\t// Please check the script to ensure the string begins with a $ sign for string interpolation\r\n`;
+			}
+			const variableName = `nv_${found[2].replace("-", "").trim()}`;
+			if(variables.includes(variableName) === false) {
+				variables += `\tstring ${variableName} = \"\"; // Named Value: ${found[2].trim()}\r\n`;
+			}
+			scriptBody = scriptBody.replace((found[1] + found[2] + found[3]), `{${variableName}}`);
+		}
+
+		const blockTemplate = template.replace("{0}", variables);
+
+		fs.writeFileSync(`${output}/block-${(index + 1).toString().padStart(3, "0")}.csx`, blockTemplate.replace('return "{1}";', scriptBody));
 	});
 
 	// Write the inline snippets out as C# script files
 	inline.forEach((match, index) => {
-		fs.writeFileSync(`${output}/inline-${(index + 1).toString().padStart(3, "0")}.csx`, template.replace('"{0}"', match));
+
+		let variables: string = "";
+		let found;
+		let scriptBody = match;
+		while ((found = namedValuePattern.exec(match)) !== null) {
+			if(variables === "") {
+				variables += `\t// The following named values have been extracted from the script and replaced with variables\r\n\t// Please check the script to ensure the string begins with a $ sign for string interpolation\r\n`;
+			}
+			const variableName = `nv_${found[2].replace("-", "").trim()}`;
+			if(variables.includes(variableName) === false) {
+				variables += `\tstring ${variableName} = \"\"; // Named Value: ${found[2].trim()}\r\n`;
+			}
+			scriptBody = scriptBody.replace((found[1] + found[2] + found[3]), `{${variableName}}`);
+		}
+
+		const inlineTemplate = template.replace("{0}", variables);
+
+		fs.writeFileSync(`${output}/inline-${(index + 1).toString().padStart(3, "0")}.csx`, inlineTemplate.replace('"{1}"', scriptBody));
 	});
 };
+
+extract();
