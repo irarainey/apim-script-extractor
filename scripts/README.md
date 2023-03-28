@@ -1,1 +1,1 @@
-Place extracted API Management policy files in this directory as XML files.
+Extracted C# script files will be placed in this directory.
