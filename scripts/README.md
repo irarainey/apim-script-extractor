@@ -1,0 +1,1 @@
+Place extracted API Management policy files in this directory as XML files.

@@ -1,5 +1,12 @@
 {
   "devDependencies": {
     "@types/node": "^18.15.5"
+  },
+  "dependencies": {
+    "run-func": "^3.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p ./",
+    "extract": "run-func out/main.js extract"
   }
 }
